@@ -13,6 +13,7 @@
 
 // منو ها اینجاس
 void clear_screen();
+void lowercase_in_place(char *text);
 void display_logo();
 void user_interface();
 void display_menu();
@@ -57,7 +58,9 @@ int run_plot = 1;
 const char *filename = "calculator_history.txt";
 
 int main() {
+#ifdef _WIN32
     system("chcp 65001 > nul");
+#endif
     user_interface();
     return 0;
 }
@@ -153,7 +156,7 @@ void mathematical_expression(){
 
                 removeSpaces(input);
 
-                strlwr(input);
+                lowercase_in_place(input);
                 strcpy(input_copy, input);
 
                 replacePiWithPiValue(input_copy);
@@ -240,7 +243,7 @@ void plot_function() {
         printf("\n🔹 Enter the function to plot (sin(x), x^2 , ...): ");
         fgets(input, sizeof(input), stdin);
         input[strcspn(input, "\n")] = '\0'; // حذف newline در انتهای رشته
-        strlwr(input);
+        lowercase_in_place(input);
 
         printf("\n🔹 Enter the Domain : ");
         scanf("%lf %lf", &x_min, &x_max);
@@ -349,6 +352,12 @@ void plot_function() {
 
 }
 
+
+void lowercase_in_place(char *text) {
+    for (; *text != '\0'; ++text) {
+        *text = (char)tolower((unsigned char)*text);
+    }
+}
 
 void clear_screen() {
 
@@ -613,6 +622,10 @@ void removeSpaces(char *str) {
 
 double ANS (int x){
     int history_count = load_history(filename,history,res);
+    if (history_count == 0) {
+        printf("\nNo previous result is available.\n");
+        return NAN;
+    }
     if ((int)x > 0 && (int)x <= history_count )
     {
         return res[(int)(x-1)] ;
@@ -636,7 +649,7 @@ void replacePiWithPiValue(char *str) {
         // بررسی دو حرف "pi"
         if (str[i] == 'p' && str[i+1] == 'i') {
             // جایگزینی "pi" با عدد پی
-            j += sprintf(&temp[j], "%.5f\n", pi); 
+            j += sprintf(&temp[j], "%.5f", pi); 
             i += 2; // پرش به دو حرف بعدی
         } else {
             temp[j++] = str[i++];
@@ -656,7 +669,7 @@ void replace_E_With_neper_Value(char *str) {
         // بررسی e
         if (str[i] == 'e' && str[i+1] != 'x') {
             // جایگزین با نپر
-            j += sprintf(&temp[j], "%.5f\n", e); 
+            j += sprintf(&temp[j], "%.5f", e); 
             i += 1; // پرش به دو حرف بعدی
         } else {
             temp[j++] = str[i++];
@@ -675,7 +688,7 @@ void make_manfi_dar_manfi_to_mosbat(char *str) {
         // بررسی دو حرف "pi"
         if (str[i] == '-' && str[i+1] == '-') {
             // جایگزینی "pi" با عدد پی
-            j += sprintf(&temp[j], "%c\n", '+'); 
+            j += sprintf(&temp[j], "%c", '+'); 
             i += 2; // پرش به دو حرف بعدی
         } else {
             temp[j++] = str[i++];
@@ -696,7 +709,7 @@ void replace_x_with_number(char* str, double num) {
     int j = 0;
     
     for (int i = 0; i < strlen(str); i++) {
-        if (str[i] == 'x'&& str[i-1]!='e') {
+        if (str[i] == 'x' && (i == 0 || str[i-1] != 'e')) {
             // جایگزینی 'x' با عدد
             j += sprintf(temp + j, "%.2f", num); 
         } else {
